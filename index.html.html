@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AffirmFlow for Creators</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* All your CSS styles go here... */
+        body { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: linear-gradient(135deg, #F9F6F1 0%, #F7D27B 100%); min-height: 100vh; color: #1C1C1E; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 40px; color: #1C1C1E; }
+        .header h1 { font-family: 'Playfair Display', serif; font-size: 3rem; font-weight: 700; margin: 0; color: #D17A2E; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .header p { font-size: 1.2rem; margin: 10px 0 0 0; color: #8AA38B; font-weight: 500; }
+        .main-content { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+        .form-section { background: #F9F6F1; border-radius: 20px; padding: 30px; box-shadow: 0 8px 32px rgba(209, 122, 46, 0.1); border: 1px solid rgba(209, 122, 46, 0.1); }
+        .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 30px; background: rgba(246, 183, 86, 0.1); border-radius: 16px; padding: 8px; }
+        .tab { padding: 12px 16px; text-align: center; border-radius: 12px; cursor: pointer; font-weight: 600; transition: all 0.3s ease; border: none; background: none; font-size: 14px; color: #1C1C1E; }
+        .tab.active { background: #D17A2E; color: #F9F6F1; box-shadow: 0 4px 12px rgba(209, 122, 46, 0.3); transform: translateY(-1px); }
+        .form-group { margin-bottom: 25px; }
+        .custom-input { width: 100%; padding: 12px 16px; border: 2px solid #F6B756; border-radius: 12px; font-size: 16px; margin-top: 10px; display: block; transition: all 0.3s ease; background: #F9F6F1; color: #1C1C1E; box-sizing: border-box; }
+        .custom-input:focus { outline: none; border-color: #D17A2E; box-shadow: 0 0 0 3px rgba(209, 122, 46, 0.1); }
+        .control-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .control-btn { padding: 10px 16px; border: 2px solid #8AA38B; background: #F9F6F1; color: #8AA38B; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; font-size: 14px; }
+        .control-btn:hover { background: #8AA38B; color: #F9F6F1; transform: translateY(-1px); }
+        .result-section { background: #F9F6F1; border-radius: 20px; padding: 30px; box-shadow: 0 8px 32px rgba(209, 122, 46, 0.1); border: 1px solid rgba(209, 122, 46, 0.1); min-height: 400px; }
+        .affirmation-display { background: linear-gradient(135deg, #D17A2E 0%, #F6B756 100%); border-radius: 16px; color: #F9F6F1; margin-bottom: 30px; min-height: 200px; display: flex; align-items: center; justify-content: center; padding: 30px; text-align: center; }
+        .affirmation-text { font-size: 1.4rem; font-weight: 600; line-height: 1.4; font-family: 'Playfair Display', serif; }
+        .output-textarea { width: 100%; min-height: 150px; padding: 16px; border: 2px solid #F6B756; border-radius: 12px; font-size: 16px; background: #F9F6F1; color: #1C1C1E; font-family: 'Inter', sans-serif; resize: vertical; margin-bottom: 20px; box-sizing: border-box; }
+        .action-buttons { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 30px; }
+        .batch-section { background: rgba(138, 163, 139, 0.1); border-radius: 12px; padding: 20px; margin-top: 20px; }
+        .batch-item { background: #F9F6F1; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #D17A2E; display: flex; justify-content: space-between; align-items: center; }
+        .batch-controls { display: flex; gap: 10px; margin-bottom: 15px; }
+        .batch-btn { padding: 8px 16px; background: #8AA38B; color: #F9F6F1; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s ease; }
+        .batch-btn:hover { background: #D17A2E; transform: translateY(-1px); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .creator-type-section, .mood-section { margin-bottom: 30px; }
+        .creator-buttons, .mood-buttons { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+        .creator-btn, .mood-btn { padding: 16px 20px; border: 2px solid #F6B756; background: #F9F6F1; color: #1C1C1E; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-align: center; font-size: 14px; }
+        .creator-btn:hover, .mood-btn:hover { background: #F6B756; color: #1C1C1E; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(246, 183, 86, 0.3); }
+        .creator-btn.active, .mood-btn.active { background: #D17A2E; color: #F9F6F1; border-color: #D17A2E; box-shadow: 0 4px 12px rgba(209, 122, 46, 0.3); }
+        @media (max-width: 768px) {
+            .main-content { grid-template-columns: 1fr; gap: 20px; }
+            .header h1 { font-size: 2rem; }
+            .tabs { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✨ AffirmFlow for Creators</h1>
+            <p>Personalized affirmations for solopreneurs, creatives & coaches</p>
+        </div>
+        <div class="main-content">
+            <div class="form-section">
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab(event, 'prompt')">Prompt Generator</button>
+                    <button class="tab" onclick="switchTab(event, 'help')">Help Me Out</button>
+                    <button class="tab" onclick="switchTab(event, 'money')">Money Making Ideas</button>
+                    <button class="tab" onclick="switchTab(event, 'skills')">Grow Your Skills</button>
+                </div>
+                <div id="auth-section" style="margin-bottom: 30px; border: 2px dashed #D17A2E; padding: 20px; border-radius: 12px;">
+                    <h3 style="font-family: 'Playfair Display', serif; color: #D17A2E; margin-top: 0;">Create an Account to Save</h3>
+                    <div class="form-group"><input type="email" id="auth-email" placeholder="Email" class="custom-input"></div>
+                    <div class="form-group"><input type="password" id="auth-password" placeholder="Password" class="custom-input"></div>
+                    <div class="control-buttons">
+                        <button id="signup-btn" class="control-btn">Sign Up</button>
+                        <button id="login-btn" class="control-btn">Log In</button>
+                    </div>
+                </div>
+                <div id="user-section" style="display: none; text-align: center; margin-bottom: 20px;">
+                    <p>Welcome! Your affirmations will now be saved to your account.</p>
+                    <button id="logout-btn" class="control-btn" style="border-color: #D17A2E; color: #D17A2E;">Log Out</button>
+                </div>
+                <div id="prompt-content" class="tab-content active">
+                    <div class="creator-type-section">
+                        <h3 style="font-family: 'Playfair Display', serif; color: #D17A2E; margin-bottom: 20px;">I am a...</h3>
+                        <div class="creator-buttons">
+                            <button class="creator-btn active" data-type="solopreneur" onclick="selectCreatorType('solopreneur')">💼 Solopreneur</button>
+                            <button class="creator-btn" data-type="creative" onclick="selectCreatorType('creative')">🎨 Creative</button>
+                            <button class="creator-btn" data-type="coach" onclick="selectCreatorType('coach')">🌟 Coach</button>
+                        </div>
+                    </div>
+                    <div class="mood-section">
+                        <h3 style="font-family: 'Playfair Display', serif; color: #D17A2E; margin-bottom: 20px;">Today I need...</h3>
+                        <div class="mood-buttons">
+                            <button class="mood-btn" data-mood="confidence" onclick="selectMood('confidence')">✨ Confidence Boost</button>
+                            <button class="mood-btn" data-mood="motivation" onclick="selectMood('motivation')">🚀 Motivation</button>
+                            <button class="mood-btn" data-mood="calm" onclick="selectMood('calm')">🧘‍♀️ Calm Energy</button>
+                            <button class="mood-btn" data-mood="abundance" onclick="selectMood('abundance')">💰 Abundance Mindset</button>
+                            <button class="mood-btn" data-mood="creativity" onclick="selectMood('creativity')">🎭 Creative Flow</button>
+                            <button class="mood-btn" data-mood="courage" onclick="selectMood('courage')">💪 Courage</button>
+                        </div>
+                    </div>
+                    <button class="generate-btn" onclick="generateAffirmation()">✨ Generate My Affirmations</button>
+                </div>
+                <div id="help-content" class="tab-content"></div>
+                <div id="money-content" class="tab-content"></div>
+                <div id="skills-content" class="tab-content"></div>
+            </div>
+            <div class="result-section">
+                <div class="affirmation-display">
+                    <div class="affirmation-text" id="affirmation-text">Click "Generate" to create your personalized affirmation! ✨</div>
+                </div>
+                <textarea id="output-textarea" class="output-textarea" placeholder="Your generated affirmations will appear here..."></textarea>
+                <div class="action-buttons">
+                    <button class="action-btn" onclick="copyOutput()">📋 Copy Output</button>
+                    <button class="action-btn" onclick="addToBatch()">📝 Add to Batch</button>
+                </div>
+                <div class="batch-section">
+                    <h3 style="font-family: 'Playfair Display', serif; color: #D17A2E; margin-bottom: 15px;">Batch Collection</h3>
+                     <div class="batch-controls">
+                        <button class="batch-btn" onclick="copyAllBatch()">Copy All</button>
+                        <button class="batch-btn" onclick="clearBatch()">Clear Batch</button>
+                    </div>
+                    <div id="batch-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Supabase Initialization and Auth Logic ---
+        const SUPABASE_URL = 'https://pjwdzsijflqragazsjap.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqd2R6c2lqZmxxcmFnYXpzamFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk2MDI1OTAsImV4cCI6MjA3NTE3ODU5MH0.Ub9_uaj1dt03ifeaf1NxcSkwmk3fV3J9c2VKROBAXds';
+
+        const { createClient } = supabase;
+        const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log('Supabase Initialized');
+
+        const authSection = document.getElementById('auth-section');
+        const userSection = document.getElementById('user-section');
+        const signupButton = document.getElementById('signup-btn');
+        const loginButton = document.getElementById('login-btn');
+        const logoutButton = document.getElementById('logout-btn');
+        const emailInput = document.getElementById('auth-email');
+        const passwordInput = document.getElementById('auth-password');
+
+        signupButton.addEventListener('click', async () => {
+            const { data, error } = await _supabase.auth.signUp({ email: emailInput.value, password: passwordInput.value });
+            if (error) { 
+                console.log(error); // <-- THIS IS THE NEW DIAGNOSTIC LINE
+                alert('Error signing up: ' + error.message); 
+            } 
+            else { alert('Success! Please check your email for a confirmation link.'); }
+        });
+
+        loginButton.addEventListener('click', async () => {
+            const { data, error } = await _supabase.auth.signInWithPassword({ email: emailInput.value, password: passwordInput.value });
+            if (error) { alert('Error logging in: ' + error.message); }
+        });
+
+        logoutButton.addEventListener('click', () => _supabase.auth.signOut());
+
+        async function fetchSavedAffirmations() {
+            const { data: { user } } = await _supabase.auth.getUser();
+            if (!user) return;
+            const { data, error } = await _supabase.from('saved_affirmations').select('affirmation');
+            if (error) { console.error('Error fetching affirmations:', error); } 
+            else { batchAffirmations = data.map(item => item.affirmation); updateBatchDisplay(); }
+        }
+
+        async function saveAffirmationToDb(affirmationText) {
+            const { data: { user } } = await _supabase.auth.getUser();
+            if (!user) return;
+            const { error } = await _supabase.from('saved_affirmations').insert({ affirmation: affirmationText });
+            if (error) console.error('Error saving affirmation:', error);
+        }
+
+        async function deleteAffirmationFromDb(affirmationText) {
+            const { data: { user } } = await _supabase.auth.getUser();
+            if (!user) return;
+            const { error } = await _supabase.from('saved_affirmations').delete().eq('affirmation', affirmationText);
+            if (error) console.error('Error deleting:', error);
+        }
+        
+        async function clearAllAfsFromDb() {
+            const { data: { user } } = await _supabase.auth.getUser();
+            if (!user) return;
+            const { error } = await _supabase.from('saved_affirmations').delete().eq('user_id', user.id);
+            if (error) console.error('Error deleting all affirmations', error);
+        }
+
+        _supabase.auth.onAuthStateChange((event, session) => {
+            if (session) {
+                authSection.style.display = 'none';
+                userSection.style.display = 'block';
+                fetchSavedAffirmations();
+            } else {
+                authSection.style.display = 'block';
+                userSection.style.display = 'none';
+                batchAffirmations = [];
+                updateBatchDisplay();
+            }
+        });
+
+        // --- Your Original App Logic ---
+        let currentAffirmation = '';
+        let batchAffirmations = [];
+        let selectedCreatorType = 'solopreneur';
+        let selectedMood = null;
+        const affirmationTemplates = { solopreneur: { confidence: ['I trust my business instincts completely'], motivation: ['I take consistent action toward my business goals']}, creative: { confidence: ['My artistic vision is valuable and needed'], motivation: ['I show up to my creative practice with dedication']}, coach: { confidence: ['I have the wisdom and skills to guide others'], motivation: ['I am passionate about helping others succeed']} };
+
+        function selectCreatorType(type) { selectedCreatorType = type; document.querySelectorAll('.creator-btn').forEach(btn => btn.classList.remove('active')); document.querySelector(`[data-type="${type}"]`).classList.add('active'); }
+        function selectMood(mood) { selectedMood = mood; document.querySelectorAll('.mood-btn').forEach(btn => btn.classList.remove('active')); document.querySelector(`[data-mood="${mood}"]`).classList.add('active'); }
+        function generateAffirmation() { const mood = selectedMood || 'confidence'; const availableAffirmations = affirmationTemplates[selectedCreatorType][mood] || []; let affirmation = availableAffirmations[Math.floor(Math.random() * availableAffirmations.length)]; currentAffirmation = affirmation; document.getElementById('affirmation-text').textContent = affirmation; document.getElementById('output-textarea').value = affirmation; }
+        function addToBatch() { const textToAdd = document.getElementById('output-textarea').value.trim(); if (textToAdd && !batchAffirmations.includes(textToAdd)) { batchAffirmations.push(textToAdd); saveAffirmationToDb(textToAdd); updateBatchDisplay(); } }
+        function updateBatchDisplay() { const batchList = document.getElementById('batch-list'); batchList.innerHTML = ''; batchAffirmations.forEach((affirmation, index) => { const batchItem = document.createElement('div'); batchItem.className = 'batch-item'; batchItem.innerHTML = `<span>${affirmation}</span><button onclick="removeBatchItem(${index})" style="background: #D17A2E; color: #F9F6F1; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">×</button>`; batchList.appendChild(batchItem); }); }
+        function removeBatchItem(index) { const affirmationToRemove = batchAffirmations[index]; batchAffirmations.splice(index, 1); deleteAffirmationFromDb(affirmationToRemove); updateBatchDisplay(); }
+        function copyOutput() { const textarea = document.getElementById('output-textarea'); textarea.select(); navigator.clipboard.writeText(textarea.value).then(() => alert('Copied to clipboard! ✨')); }
+        function copyAllBatch() { const allText = batchAffirmations.join('\n\n'); navigator.clipboard.writeText(allText).then(() => alert('All batch affirmations copied! ✨')); }
+        function clearBatch() { batchAffirmations = []; clearAllAfsFromDb(); updateBatchDisplay(); }
+        function switchTab(evt, tabName) { document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); document.getElementById(tabName + '-content').classList.add('active'); evt.currentTarget.classList.add('active'); }
+        window.onload = function() { generateAffirmation(); };
+    </script>
+</body>
+</html>
